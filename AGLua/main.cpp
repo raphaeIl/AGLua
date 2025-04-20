@@ -261,7 +261,7 @@ DWORD start(LPVOID)
     freopen("CONOUT$", "w", stdout);
     freopen("CONOUT$", "w", stderr);
 
-    util::log("GILua by azzu\n");
+    util::log("GILua by azzu (modified by Raphael)\n");
 
     auto dir = get_scripts_folder();
     if (!dir)

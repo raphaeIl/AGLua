@@ -1,10 +1,12 @@
-# GILua
+# AGLua
+
+Modified version of GILua that supports tolua (LuaJIT 2.1?)
+
+only tested on AG
 
 ## Usage
-- Download the release
+- Build
 
-- Put the full path to your game .exe on the first line of settings.txt
-
-- Open Launcher.exe (Or inject GILua.dll with your own injector)
+- Put both `AGLua.dll` and `tolua.dll` in game exe folder if using versionshim (or use your own injector)
 
 - Put all scripts in the Scripts directory. They must have a .lua extension.

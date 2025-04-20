@@ -4,7 +4,7 @@
 #include <optional>
 #include <fstream>
 
-#include "../GILua/util.hpp"
+#include "../AGLua/util.hpp"
 
 namespace fs = std::filesystem;
 
@@ -54,10 +54,10 @@ int main()
     if (!current_dir)
         return 0;
 
-    auto dll_path = current_dir.value() / "GILua.dll";
+    auto dll_path = current_dir.value() / "AGLua.dll";
     if (!fs::is_regular_file(dll_path))
     {
-        printf("GILua.dll not found\n");
+        printf("AGLua.dll not found\n");
         system("pause");
         return 0;
     }
