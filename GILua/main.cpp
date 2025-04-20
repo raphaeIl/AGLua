@@ -1,4 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
+
 #include <Windows.h>
 
 #include <cstdio>
@@ -9,7 +10,7 @@
 #include <fstream>
 #include <filesystem>
 
-#include "lua/lua.hpp"
+#include "luajit/lua.hpp"
 #include "scanner.hpp"
 #include "pe.hpp"
 #include "util.hpp"
@@ -42,21 +43,21 @@ int xluaL_loadbuffer_hook(lua_State* L, const char* chunk, size_t sz, const char
 {
     gi_L = L;
     main_thread = OpenThread(THREAD_ALL_ACCESS, false, GetCurrentThreadId());
-    xlua = GetModuleHandle(L"xlua.dll");
-    xluaL_loadbuffer = (pfn_loadbuffer)GetProcAddress(xlua, "xluaL_loadbuffer");
+    xlua = GetModuleHandle(L"tolua.dll");
+    xluaL_loadbuffer = (pfn_loadbuffer)GetProcAddress(xlua, "tolua_loadbuffer");
     *pp_loadbuffer = xluaL_loadbuffer;
     return (*pp_loadbuffer)(L, chunk, sz, chunkname);
 }
 
 pfn_loadbuffer* scan_loadbuffer(HMODULE ua)
 {
-    util::log("Scanning...\n");
+    util::log("Scanning loadbuffer...\n");
     auto rdata = util::pe::get_section_by_name(ua, ".rdata");
     auto il2cpp = util::pe::get_section_by_name(ua, "il2cpp");
     if (il2cpp == NULL)
         il2cpp = util::pe::get_section_by_name(ua, ".text");
 
-    auto str = util::scanner::find_pat((const uint8_t*)"xluaL_loadbuffer", "xxxxxxxxxxxxxxxx", (const uint8_t*)((uint64_t)ua + rdata->VirtualAddress), rdata->Misc.VirtualSize);
+    auto str = util::scanner::find_pat((const uint8_t*)"tolua_loadbuffer", "xxxxxxxxxxxxxxxx", (const uint8_t*)((uint64_t)ua + rdata->VirtualAddress), rdata->Misc.VirtualSize);
     if (str == NULL)
         return NULL;
 
@@ -67,7 +68,7 @@ pfn_loadbuffer* scan_loadbuffer(HMODULE ua)
     auto off = *(uint32_t*)mov;
     pfn_loadbuffer* ptr = (pfn_loadbuffer*)(mov + off + 4);
 
-    util::log("xluaL_loadbuffer: %p\n", ptr);
+    util::log("tolua_loadbuffer: %p\n", ptr);
     return ptr;
 }
 
@@ -94,7 +95,7 @@ void get_gi_L()
     if (pp_loadbuffer == NULL)
     {
         xluaL_loadbuffer = scan_loadbuffer_new(ua);
-        util::log("xluaL_loadbuffer: %p\n", xluaL_loadbuffer);
+        util::log("tolua_loadbuffer: %p\n", xluaL_loadbuffer);
         Sleep(2000); // need to hook after vmprotect crc check
 
         hook_init();
@@ -135,7 +136,7 @@ std::optional<std::string> compile(lua_State* L, const char* script)
         return std::nullopt;
     }
 
-    ret = lua_dump(L, writer, &compiled_script, 0);
+    ret = lua_dump(L, writer, &compiled_script);
     if (ret != 0)
     {
         util::log("lua_dump failed(%i)\n", ret);
